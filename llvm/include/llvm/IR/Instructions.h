@@ -5405,6 +5405,53 @@ public:
   }
 };
 
+//===----------------------------------------------------------------------===//
+//                              BitInsert Class
+//===----------------------------------------------------------------------===//
+class BitInsertInst : public Instruction{
+protected:
+  // Note: Instruction needs to be a friend here to call cloneImpl.
+  friend class Instruction;
+
+  /// Clone an identical FreezeInst
+  LLVM_ABI BitInsertInst *cloneImpl() const;
+public:
+  LLVM_ABI explicit BitInsertInst(Value *Base, Value *Val, Value *Offset,
+                               const Twine &NameStr = "",
+                               InsertPosition InsertBefore = nullptr);
+
+  // Methods for support type inquiry through isa, cast, and dyn_cast:
+  static inline bool classof(const Instruction *I) {
+    return I->getOpcode() == BitInsert;
+  }
+  static inline bool classof(const Value *V) {
+    return isa<Instruction>(V) && classof(cast<Instruction>(V));
+  }
+};
+
+//===----------------------------------------------------------------------===//
+//                              BitExtract Class
+//===----------------------------------------------------------------------===//
+class BitExtractInst: public Instruction {
+protected:
+  // Note: Instruction needs to be a friend here to call cloneImpl.
+  friend class Instruction;
+  /// Clone an identical FreezeInst
+  LLVM_ABI BitExtractInst *cloneImpl() const;
+public:
+  LLVM_ABI explicit BitExtractInst(Value* Type, Value *Src, Value *Offset,
+                               const Twine &NameStr = "",
+                               InsertPosition InsertBefore = nullptr);
+
+  // Methods for support type inquiry through isa, cast, and dyn_cast:
+  static inline bool classof(const Instruction *I) {
+    return I->getOpcode() == BitExtract;
+  }
+  static inline bool classof(const Value *V) {
+    return isa<Instruction>(V) && classof(cast<Instruction>(V));
+  }
+};
+
 } // end namespace llvm
 
 #endif // LLVM_IR_INSTRUCTIONS_H
