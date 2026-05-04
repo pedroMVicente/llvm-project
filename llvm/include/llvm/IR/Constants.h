@@ -1508,6 +1508,12 @@ public:
   LLVM_ABI static Constant *getShuffleVector(Constant *V1, Constant *V2,
                                              ArrayRef<int> Mask,
                                              Type *OnlyIfReducedTy = nullptr);
+  LLVM_ABI static Constant *getBitInsert(Constant *Base, Constant *Val,
+                                         Constant *Offset,
+                                         Type *OnlyIfReducedTy = nullptr);
+  LLVM_ABI static Constant *getBitExtract(Type *Ty, Constant *Src,
+                                         Constant *Offset,
+                                         Type *OnlyIfReducedTy = nullptr);
 
   /// Return the opcode at the root of this constant expression
   unsigned getOpcode() const { return getSubclassDataFromValue(); }

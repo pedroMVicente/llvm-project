@@ -5409,6 +5409,12 @@ public:
 //                              BitInsert Class
 //===----------------------------------------------------------------------===//
 class BitInsertInst : public Instruction{
+
+  constexpr static IntrusiveOperandsAllocMarker AllocMarker{3};
+
+  LLVM_ABI explicit BitInsertInst(Value *Base, Value *Val, Value *Offset,
+                              const Twine &NameStr = "",
+                              InsertPosition InsertBefore = nullptr);
 protected:
   // Note: Instruction needs to be a friend here to call cloneImpl.
   friend class Instruction;
@@ -5416,9 +5422,18 @@ protected:
   /// Clone an identical FreezeInst
   LLVM_ABI BitInsertInst *cloneImpl() const;
 public:
-  LLVM_ABI explicit BitInsertInst(Value *Base, Value *Val, Value *Offset,
-                               const Twine &NameStr = "",
-                               InsertPosition InsertBefore = nullptr);
+
+  static BitInsertInst *Create(Value *Base, Value *Val, Value *Offset,
+                              const Twine &NameStr = "",
+                              InsertPosition InsertBefore = nullptr) {
+    return new (AllocMarker)
+        BitInsertInst(Base, Val, Offset, NameStr, InsertBefore);
+  }
+
+  /// Return true if an bitinsert instruction can be
+  /// formed with the specified operands.
+  LLVM_ABI static bool isValidOperands(const Value *Base, const Value *Val,
+                                       const Value *Offset);
 
   // Methods for support type inquiry through isa, cast, and dyn_cast:
   static inline bool classof(const Instruction *I) {
@@ -5433,15 +5448,30 @@ public:
 //                              BitExtract Class
 //===----------------------------------------------------------------------===//
 class BitExtractInst: public Instruction {
+
+  constexpr static IntrusiveOperandsAllocMarker AllocMarker{3};
+
+  LLVM_ABI BitExtractInst(Type* Ty, Value *Src, Value *Offset,
+                          const Twine &NameStr = "",
+                          InsertPosition InsertBefore = nullptr);
 protected:
   // Note: Instruction needs to be a friend here to call cloneImpl.
   friend class Instruction;
   /// Clone an identical FreezeInst
   LLVM_ABI BitExtractInst *cloneImpl() const;
 public:
-  LLVM_ABI explicit BitExtractInst(Value* Type, Value *Src, Value *Offset,
+
+  static BitExtractInst *Create(Type* Ty, Value *Src, Value *Offset,
                                const Twine &NameStr = "",
-                               InsertPosition InsertBefore = nullptr);
+                               InsertPosition InsertBefore = nullptr) {
+    return new (AllocMarker)
+        BitExtractInst(Ty, Src, Offset, NameStr, InsertBefore);
+  }
+
+  /// Return true if an bitextract instruction can be
+  /// formed with the specified operands.
+  LLVM_ABI static bool isValidOperands(const Value *Base, const Value *Val,
+                                       const Value *Offset);
 
   // Methods for support type inquiry through isa, cast, and dyn_cast:
   static inline bool classof(const Instruction *I) {

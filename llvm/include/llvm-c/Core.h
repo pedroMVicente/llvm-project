@@ -133,8 +133,8 @@ typedef enum {
   LLVMExtractValue   = 53,
   LLVMInsertValue    = 54,
   LLVMFreeze         = 68,
-  LLVMBitInsert      = 71,
-  LLVMBitExtract     = 72,
+  LLVMBitInsert      = 72,
+  LLVMBitExtract     = 73,
 
   /* Atomic operators */
   LLVMFence          = 55,
