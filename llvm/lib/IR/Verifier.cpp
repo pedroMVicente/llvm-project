@@ -594,6 +594,8 @@ private:
   void visitExtractElementInst(ExtractElementInst &EI);
   void visitInsertElementInst(InsertElementInst &EI);
   void visitShuffleVectorInst(ShuffleVectorInst &EI);
+  void visitBitInsertInst(BitInsertInst &EI);
+  void visitBitExtractInst(BitExtractInst &EI);
   void visitVAArgInst(VAArgInst &VAA) { visitInstruction(VAA); }
   void visitCallInst(CallInst &CI);
   void visitInvokeInst(InvokeInst &II);
@@ -4487,6 +4489,20 @@ void Verifier::visitShuffleVectorInst(ShuffleVectorInst &SV) {
         "Invalid shufflevector operands!", &SV);
   visitInstruction(SV);
 }
+
+void Verifier::visitBitInsertInst(BitInsertInst &IE) {
+  Check(BitInsertInst::isValidOperands(IE.getOperand(0), IE.getOperand(1),
+                                           IE.getOperand(2)),
+        "Invalid insertelement operands!", &IE);
+  visitInstruction(IE);
+}
+
+void Verifier::visitBitExtractInst(BitExtractInst &IE) {
+  Check(BitExtractInst::isValidOperands(IE.getType(), IE.getOperand(0), IE.getOperand(1)),
+        "Invalid insertelement operands!", &IE);
+  visitInstruction(IE);
+}
+
 
 void Verifier::visitGetElementPtrInst(GetElementPtrInst &GEP) {
   if (auto *MD = mdconst::extract_or_null<ConstantInt>(

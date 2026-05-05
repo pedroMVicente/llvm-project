@@ -626,6 +626,10 @@ void llvm::deleteConstant(Constant *C) {
       delete static_cast<ShuffleVectorConstantExpr *>(C);
     else if (isa<GetElementPtrConstantExpr>(C))
       delete static_cast<GetElementPtrConstantExpr *>(C);
+    else if (isa<BitInsertInst>(C))
+      delete static_cast<BitInsertInstConstantExpr *>(C);
+    else if (isa<BitExtractInst>(C))
+      delete static_cast<BitExtractInstConstantExpr *>(C);
     else
       llvm_unreachable("Unexpected constant expr");
     break;

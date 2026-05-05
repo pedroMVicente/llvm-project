@@ -193,6 +193,53 @@ public:
   }
 };
 
+class BitInsertInstConstantExpr final : public ConstantExpr {
+  constexpr static IntrusiveOperandsAllocMarker AllocMarker{3};
+
+public:
+  BitInsertInstConstantExpr(Constant *C1, Constant *C2, Constant *C3)
+      : ConstantExpr(C1->getType(), Instruction::BitInsert, AllocMarker) {
+    Op<0>() = C1;
+    Op<1>() = C2;
+    Op<2>() = C3;
+  }
+
+  // allocate space for exactly three operands
+  void *operator new(size_t S) { return User::operator new(S, AllocMarker); }
+  void operator delete(void *Ptr) { User::operator delete(Ptr, AllocMarker); }
+
+  /// Transparently provide more efficient getOperand methods.
+  DECLARE_TRANSPARENT_OPERAND_ACCESSORS(Value);
+
+  static bool classof(const ConstantExpr *CE) {
+    return CE->getOpcode() == Instruction::BitExtract;
+  }
+  static bool classof(const Value *V) {
+    return isa<ConstantExpr>(V) && classof(cast<ConstantExpr>(V));
+  }
+};
+
+class BitExtractInstConstantExpr final : public ConstantExpr {
+  constexpr static IntrusiveOperandsAllocMarker AllocMarker{2};
+public:
+  BitExtractInstConstantExpr(Type *Ty, Constant *C1, Constant *C2)
+      : ConstantExpr(Ty, Instruction::BitExtract, AllocMarker) {
+    Op<0>() = C1;
+    Op<1>() = C2;
+  }
+  // allocate space for exactly two operands
+  void *operator new(size_t S) { return User::operator new(S, AllocMarker); }
+  void operator delete(void *Ptr) { User::operator delete(Ptr, AllocMarker); }
+  /// Transparently provide more efficient getOperand methods.
+  DECLARE_TRANSPARENT_OPERAND_ACCESSORS(Value);
+  static bool classof(const ConstantExpr *CE) {
+    return CE->getOpcode() == Instruction::BitExtract;
+  }
+  static bool classof(const Value *V) {
+    return isa<ConstantExpr>(V) && classof(cast<ConstantExpr>(V));
+  }
+};
+
 /// GetElementPtrConstantExpr - This class is private to Constants.cpp, and is
 /// used behind the scenes to implement getelementptr constant exprs.
 class GetElementPtrConstantExpr : public ConstantExpr {
@@ -256,6 +303,16 @@ template <>
 struct OperandTraits<ShuffleVectorConstantExpr>
     : public FixedNumOperandTraits<ShuffleVectorConstantExpr, 2> {};
 DEFINE_TRANSPARENT_OPERAND_ACCESSORS(ShuffleVectorConstantExpr, Value)
+
+template <>
+struct OperandTraits<BitInsertInstConstantExpr>
+    : public FixedNumOperandTraits<BitInsertInstConstantExpr, 3> {};
+DEFINE_TRANSPARENT_OPERAND_ACCESSORS(BitInsertInstConstantExpr, Value)
+
+template <>
+struct OperandTraits<BitExtractInstConstantExpr>
+    : public FixedNumOperandTraits<BitExtractInstConstantExpr, 3> {};
+DEFINE_TRANSPARENT_OPERAND_ACCESSORS(BitExtractInstConstantExpr, Value)
 
 template <>
 struct OperandTraits<GetElementPtrConstantExpr>
@@ -502,6 +559,10 @@ public:
     case Instruction::GetElementPtr:
       return GetElementPtrConstantExpr::Create(
           ExplicitTy, Ops[0], Ops.slice(1), Ty, SubclassOptionalData, InRange);
+    case Instruction::BitInsert:
+        return new BitInsertInstConstantExpr(Ops[0], Ops[1], Ops[2]);
+    case Instruction::BitExtract:
+        return new BitExtractInstConstantExpr(Ty, Ops[1], Ops[2]);
     }
   }
 };
