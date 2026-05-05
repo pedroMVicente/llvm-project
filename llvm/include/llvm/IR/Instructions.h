@@ -5470,7 +5470,7 @@ public:
 
   /// Return true if an bitextract instruction can be
   /// formed with the specified operands.
-  LLVM_ABI static bool isValidOperands(const Value *Base, const Value *Val,
+  LLVM_ABI static bool isValidOperands(const Type *Ty, const Value *Val,
                                        const Value *Offset);
 
   // Methods for support type inquiry through isa, cast, and dyn_cast:
