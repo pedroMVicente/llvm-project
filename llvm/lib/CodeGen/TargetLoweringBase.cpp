@@ -2296,6 +2296,8 @@ int TargetLoweringBase::InstructionOpcodeToISD(unsigned Opcode) const {
   case InsertValue:    return ISD::MERGE_VALUES;
   case LandingPad:     return 0;
   case Freeze:         return ISD::FREEZE;
+  case BitInsert:      return ISD::BITINSERT;
+  case BitExtract:     return ISD::BITEXTRACT;
   }
 
   llvm_unreachable("Unknown instruction type encountered!");

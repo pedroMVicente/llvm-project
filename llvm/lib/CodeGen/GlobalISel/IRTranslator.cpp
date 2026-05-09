@@ -3502,6 +3502,18 @@ bool IRTranslator::translateShuffleVector(const User &U,
   return true;
 }
 
+bool IRTranslator::translateBitInsert(const User &U,
+                                       MachineIRBuilder &MIRBuilder) {
+  // TODO: replace with TargetOpcode::G_BITINSERT once defined in GenericOpcodes.td
+  return false; // falls back to SelectionDAG path
+}
+
+bool IRTranslator::translateBitExtract(const User &U,
+                                        MachineIRBuilder &MIRBuilder) {
+  // TODO: replace with TargetOpcode::G_BITEXTRACT once defined in GenericOpcodes.td
+  return false;
+}
+
 bool IRTranslator::translatePHI(const User &U, MachineIRBuilder &MIRBuilder) {
   const PHINode &PI = cast<PHINode>(U);
 

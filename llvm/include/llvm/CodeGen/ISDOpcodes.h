@@ -698,6 +698,12 @@ enum NodeType {
   /// If passthru is undef, ?s remain undefined.
   VECTOR_COMPRESS,
 
+  /// TODO
+  BITINSERT,
+
+  /// TODO
+  BITEXTRACT,
+
   /// MULHU/MULHS - Multiply high - Multiply two integers of type iN,
   /// producing an unsigned/signed value of type i[2*N], then return the top
   /// part.

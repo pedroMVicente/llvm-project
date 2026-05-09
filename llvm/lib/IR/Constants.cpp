@@ -2816,6 +2816,24 @@ Constant *ConstantExpr::getShuffleVector(Constant *V1, Constant *V2,
   return pImpl->ExprConstants.getOrCreate(ShufTy, Key);
 }
 
+Constant *ConstantExpr::getBitInsert(Constant *Base, Constant *Val,
+                                      Constant *Offset, Type *Ty) {
+  assert(Base && Val && Offset && "Null operand to getBitInsert");
+  Constant *ArgVec[] = {Base, Val, Offset};
+  const ConstantExprKeyType Key(Instruction::BitInsert, ArgVec);
+  LLVMContextImpl *pImpl = Ty->getContext().pImpl;
+  return pImpl->ExprConstants.getOrCreate(Ty, Key);
+}
+
+Constant *ConstantExpr::getBitExtract(Type *Ty, Constant *Src,
+                                       Constant *Offset, Type *SrcTy) {
+  assert(Src && Offset && "Null operand to getBitExtract");
+  Constant *ArgVec[] = {Src, Offset};
+  const ConstantExprKeyType Key(Instruction::BitExtract, ArgVec);
+  LLVMContextImpl *pImpl = Ty->getContext().pImpl;
+  return pImpl->ExprConstants.getOrCreate(Ty, Key);
+}
+
 Constant *ConstantExpr::getNeg(Constant *C, bool HasNSW) {
   assert(C->getType()->isIntOrIntVectorTy() &&
          "Cannot NEG a nonintegral value!");

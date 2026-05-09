@@ -183,6 +183,27 @@ public:
     return nullptr;
   }
 
+  Value *FoldBitInsert(Value *Base, Value *Val,
+                                    Value *Offset) const override {
+
+    auto *C0 = dyn_cast<Constant>(Base);
+    auto *C1 = dyn_cast<Constant>(Val);
+    auto *C2 = dyn_cast<Constant>(Offset);
+    if (C0 && C1 && C2)
+      return Fold(ConstantExpr::getBitInsert(C0, C1, C2));
+    return nullptr;
+  }
+
+  Value *FoldBitExtract(Type *Ty, Value *Src,
+                                      Value *Offset) const override {
+    auto *C0 = dyn_cast<Constant>(Src);
+    auto *C1 = dyn_cast<Constant>(Offset);
+    if (C0 && C1)
+      return Fold(ConstantExpr::getBitExtract(Ty, C0, C1));
+    return nullptr;
+  }
+
+
   Value *FoldCast(Instruction::CastOps Op, Value *V,
                   Type *DestTy) const override {
     if (auto *C = dyn_cast<Constant>(V))

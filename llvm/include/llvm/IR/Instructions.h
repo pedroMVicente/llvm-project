@@ -5430,6 +5430,9 @@ public:
         BitInsertInst(Base, Val, Offset, NameStr, InsertBefore);
   }
 
+  /// Transparently provide more efficient getOperand methods.
+  DECLARE_TRANSPARENT_OPERAND_ACCESSORS(Value);
+
   /// Return true if an bitinsert instruction can be
   /// formed with the specified operands.
   LLVM_ABI static bool isValidOperands(const Value *Base, const Value *Val,
@@ -5443,6 +5446,13 @@ public:
     return isa<Instruction>(V) && classof(cast<Instruction>(V));
   }
 };
+
+
+template <>
+struct OperandTraits<BitInsertInst> :
+    public FixedNumOperandTraits<BitInsertInst, 3> {};
+
+DEFINE_TRANSPARENT_OPERAND_ACCESSORS(BitInsertInst, Value)
 
 //===----------------------------------------------------------------------===//
 //                              BitExtract Class
@@ -5468,6 +5478,9 @@ public:
         BitExtractInst(Ty, Src, Offset, NameStr, InsertBefore);
   }
 
+  /// Transparently provide more efficient getOperand methods.
+  DECLARE_TRANSPARENT_OPERAND_ACCESSORS(Value);
+
   /// Return true if an bitextract instruction can be
   /// formed with the specified operands.
   LLVM_ABI static bool isValidOperands(const Type *Ty, const Value *Val,
@@ -5482,6 +5495,11 @@ public:
   }
 };
 
+template <>
+struct OperandTraits<BitExtractInst> :
+    public FixedNumOperandTraits<BitExtractInst, 3> {};
+
+DEFINE_TRANSPARENT_OPERAND_ACCESSORS(BitExtractInst, Value)
 } // end namespace llvm
 
 #endif // LLVM_IR_INSTRUCTIONS_H

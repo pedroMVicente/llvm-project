@@ -4152,6 +4152,31 @@ void SelectionDAGBuilder::visitInsertElement(const User &I) {
                            InVec, InVal, InIdx));
 }
 
+void SelectionDAGBuilder::visitBitInsert(const User &I) {
+  SDValue Base   = getValue(I.getOperand(0));
+  SDValue Val    = getValue(I.getOperand(1));
+  SDValue Offset = getValue(I.getOperand(2));
+
+  EVT ResultVT = Base.getValueType();
+
+  setValue(&I, DAG.getNode(ISD::BITINSERT, getCurSDLoc(),
+                           ResultVT,
+                           Base, Val, Offset));
+}
+
+void SelectionDAGBuilder::visitBitExtract(const User &I) {
+  SDValue Src    = getValue(I.getOperand(0));
+  SDValue Offset = getValue(I.getOperand(1));
+
+  const TargetLowering &TLI = DAG.getTargetLoweringInfo();
+
+  EVT ResultVT = TLI.getValueType(DAG.getDataLayout(), I.getType());
+
+  setValue(&I, DAG.getNode(ISD::BITEXTRACT, getCurSDLoc(),
+                           ResultVT,
+                           Src, Offset));
+}
+
 void SelectionDAGBuilder::visitExtractElement(const User &I) {
   const TargetLowering &TLI = DAG.getTargetLoweringInfo();
   SDValue InVec = getValue(I.getOperand(0));
