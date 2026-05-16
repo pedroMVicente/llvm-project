@@ -2817,8 +2817,11 @@ Constant *ConstantExpr::getShuffleVector(Constant *V1, Constant *V2,
 }
 
 Constant *ConstantExpr::getBitInsert(Constant *Base, Constant *Val,
-                                      Constant *Offset, Type *Ty) {
+                                      Constant *Offset, Type *OnlyIfReducedTy) {
   assert(Base && Val && Offset && "Null operand to getBitInsert");
+  Type *Ty = Base->getType();
+  if (OnlyIfReducedTy == Ty)
+    return nullptr;
   Constant *ArgVec[] = {Base, Val, Offset};
   const ConstantExprKeyType Key(Instruction::BitInsert, ArgVec);
   LLVMContextImpl *pImpl = Ty->getContext().pImpl;
@@ -2826,8 +2829,10 @@ Constant *ConstantExpr::getBitInsert(Constant *Base, Constant *Val,
 }
 
 Constant *ConstantExpr::getBitExtract(Type *Ty, Constant *Src,
-                                       Constant *Offset, Type *SrcTy) {
+                                       Constant *Offset, Type *OnlyIfReducedTy) {
   assert(Src && Offset && "Null operand to getBitExtract");
+  if (OnlyIfReducedTy == Ty)
+    return nullptr;
   Constant *ArgVec[] = {Src, Offset};
   const ConstantExprKeyType Key(Instruction::BitExtract, ArgVec);
   LLVMContextImpl *pImpl = Ty->getContext().pImpl;
