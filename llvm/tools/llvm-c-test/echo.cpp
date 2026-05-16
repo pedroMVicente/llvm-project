@@ -1006,14 +1006,14 @@ struct FunCloner {
         LLVMValueRef Base = CloneValue(LLVMGetOperand(Src, 0));
         LLVMValueRef Val = CloneValue(LLVMGetOperand(Src, 1));
         LLVMValueRef Offset = CloneValue(LLVMGetOperand(Src, 2));
-        Dst = LLVMBuildInsertElement(Builder, Base, Val, Offset, Name);
+        Dst = LLVMBuildBitInsert(Builder, Base, Val, Offset, Name);
         break;
       }
       case LLVMBitExtract: {
         LLVMValueRef Type = CloneValue(LLVMGetOperand(Src, 0));
         LLVMValueRef SrcV = CloneValue(LLVMGetOperand(Src, 1));
         LLVMValueRef Offset = CloneValue(LLVMGetOperand(Src, 2));
-        Dst = LLVMBuildInsertElement(Builder, Type, SrcV, Offset, Name);
+        Dst = LLVMBuildBitExtract(Builder, Type, SrcV, Offset, Name);
         break;
       }
       case LLVMFence: {

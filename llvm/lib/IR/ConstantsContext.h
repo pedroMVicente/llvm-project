@@ -212,7 +212,7 @@ public:
   DECLARE_TRANSPARENT_OPERAND_ACCESSORS(Value);
 
   static bool classof(const ConstantExpr *CE) {
-    return CE->getOpcode() == Instruction::BitExtract;
+    return CE->getOpcode() == Instruction::BitInsert;
   }
   static bool classof(const Value *V) {
     return isa<ConstantExpr>(V) && classof(cast<ConstantExpr>(V));
@@ -311,7 +311,7 @@ DEFINE_TRANSPARENT_OPERAND_ACCESSORS(BitInsertInstConstantExpr, Value)
 
 template <>
 struct OperandTraits<BitExtractInstConstantExpr>
-    : public FixedNumOperandTraits<BitExtractInstConstantExpr, 3> {};
+    : public FixedNumOperandTraits<BitExtractInstConstantExpr, 2> {};
 DEFINE_TRANSPARENT_OPERAND_ACCESSORS(BitExtractInstConstantExpr, Value)
 
 template <>
