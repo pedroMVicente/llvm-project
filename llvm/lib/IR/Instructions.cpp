@@ -2618,8 +2618,8 @@ bool BitInsertInst::isValidOperands(const Value *Base, const Value *Val,
   if (!Base->getType()->isByteTy())
     return false;   // First operand of bitinsert must be byte type.
 
-  if (!Val->getType()->isByteTy() && !Val->getType()->isIntegerTy())
-    return false;// Second operand of bitinsert must be a byte type or a integer type.
+  if (!Val->getType()->isFirstClassType())
+    return false;// Second operand of bitinsert must be a first-class type.
 
   if (!Offset->getType()->isIntegerTy())
     return false;  // Third operand of bitinsert must be i32.
@@ -2643,8 +2643,8 @@ BitExtractInst::BitExtractInst(Type *Ty, Value *Src, Value *Offset,
 
 bool BitExtractInst::isValidOperands(const Type *Ty, const Value *Src,
                                         const Value *Offset) {
-  if (!Ty->isByteTy() && !Ty->isIntegerTy())
-    return false;   // First operand of bitextract must be byte or int type.
+  if (!Ty->isFirstClassType())
+    return false;   // First operand of bitextract must be a first-class type.
 
   if (!Src->getType()->isByteTy())
     return false;// Second operand of bitextract must be a byte type.
