@@ -4736,6 +4736,12 @@ bool LLParser::parseValID(ValID &ID, PerFunctionState *PFS, Type *ExpectedTy) {
         return true;
     }
 
+    if(Opc == Instruction::BitExtract) {
+      if (parseType(Ty) ||
+          parseToken(lltok::comma, "expected comma after bitextract's type"))
+        return true;
+    }
+
     if (parseGlobalValueVector(Elts) ||
         parseToken(lltok::rparen, "expected ')' in constantexpr"))
       return true;
@@ -4805,14 +4811,26 @@ bool LLParser::parseValID(ValID &ID, PerFunctionState *PFS, Type *ExpectedTy) {
       if (!ExtractElementInst::isValidOperands(Elts[0], Elts[1]))
         return error(ID.Loc, "invalid extractelement operands");
       ID.ConstantVal = ConstantExpr::getExtractElement(Elts[0], Elts[1]);
-    } else {
-      assert(Opc == Instruction::InsertElement && "Unknown opcode");
+    } else if (Opc == Instruction::InsertElement) {
       if (Elts.size() != 3)
         return error(ID.Loc, "expected three operands to insertelement");
       if (!InsertElementInst::isValidOperands(Elts[0], Elts[1], Elts[2]))
         return error(ID.Loc, "invalid insertelement operands");
       ID.ConstantVal =
                  ConstantExpr::getInsertElement(Elts[0], Elts[1],Elts[2]);
+    } else if (Opc == Instruction::BitInsert) {
+      if (Elts.size() != 3)
+        return error(ID.Loc, "expected three operands to bitinsert");
+      if (!BitInsertInst::isValidOperands(Elts[0], Elts[1], Elts[2]))
+        return error(ID.Loc, "invalid bitinsert operands");
+      ID.ConstantVal = ConstantExpr::getBitInsert(Elts[0], Elts[1], Elts[2]);
+    } else {
+      assert(Opc == Instruction::BitExtract && "Unknown opcode");
+      if (Elts.size() != 2)
+        return error(ID.Loc, "expected two operands to bitextract");
+      if (!BitExtractInst::isValidOperands(Ty, Elts[0], Elts[1]))
+        return error(ID.Loc, "invalid bitextract operands");
+      ID.ConstantVal = ConstantExpr::getBitExtract(Ty, Elts[0], Elts[1]);
     }
 
     ID.Kind = ValID::t_Constant;
@@ -7721,6 +7739,10 @@ int LLParser::parseInstruction(Instruction *&Inst, BasicBlock *BB,
     return parseLandingPad(Inst, PFS);
   case lltok::kw_freeze:
     return parseFreeze(Inst, PFS);
+  case lltok::kw_bitinsert:
+    return parseBitInsert(Inst, PFS);
+  case lltok::kw_bitextract:
+    return parseBitExtract(Inst, PFS);
   // Call.
   case lltok::kw_call:
     return parseCall(Inst, PFS, CallInst::TCK_None);
@@ -8535,6 +8557,45 @@ bool LLParser::parseInsertElement(Instruction *&Inst, PerFunctionState &PFS) {
     return error(Loc, "invalid insertelement operands");
 
   Inst = InsertElementInst::Create(Op0, Op1, Op2);
+  return false;
+}
+
+// parseBitExtract
+// ::= 'bitextract' Type ',' TypeAndValue ',' TypeAndValue
+bool LLParser::parseBitExtract(Instruction *&Inst, PerFunctionState &PFS) {
+  LocTy Loc = Lex.getLoc();
+  Type *Ty = nullptr;
+  Value *Op0, *Op1;
+  if (parseType(Ty) ||
+      parseToken(lltok::comma, "expected ',' after bitextract type") ||
+      parseTypeAndValue(Op0, PFS) ||
+      parseToken(lltok::comma, "expected ',' after bitextract source value") ||
+      parseTypeAndValue(Op1, PFS))
+    return true;
+
+  if (!BitExtractInst::isValidOperands(Ty, Op0, Op1))
+    return error(Loc, "invalid bitextract operands");
+
+  Inst = BitExtractInst::Create(Ty, Op0, Op1);
+  return false;
+}
+
+// parseBitInsert
+// ::= 'bitinsert' TypeAndValue ',' TypeAndValue ',' TypeAndValue
+bool LLParser::parseBitInsert(Instruction *&Inst, PerFunctionState &PFS) {
+  LocTy Loc = Lex.getLoc();
+  Value *Op0, *Op1, *Op2;
+  if (parseTypeAndValue(Op0, Loc, PFS) ||
+      parseToken(lltok::comma, "expected ',' after bitinsert source value") ||
+      parseTypeAndValue(Op1, PFS) ||
+      parseToken(lltok::comma, "expected ',' after bitinsert insert value") ||
+      parseTypeAndValue(Op2, PFS))
+    return true;
+
+  if (!BitInsertInst::isValidOperands(Op0, Op1, Op2))
+    return error(Loc, "invalid bitinsert operands");
+
+  Inst = BitInsertInst::Create(Op0, Op1, Op2);
   return false;
 }
 

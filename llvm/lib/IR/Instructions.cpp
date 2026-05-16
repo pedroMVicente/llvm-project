@@ -2621,7 +2621,7 @@ bool BitInsertInst::isValidOperands(const Value *Base, const Value *Val,
   if (!Val->getType()->isFirstClassType())
     return false;// Second operand of bitinsert must be a first-class type.
 
-  if (!Offset->getType()->isIntegerTy())
+  if (!Offset->getType()->isIntegerTy(32))
     return false;  // Third operand of bitinsert must be i32.
   return true;
 }
@@ -2635,7 +2635,7 @@ BitExtractInst::BitExtractInst(Type *Ty, Value *Src, Value *Offset,
                                      InsertPosition InsertBef)
     : Instruction(Ty, BitExtract, AllocMarker, InsertBef) {
   assert(isValidOperands(Ty, Src, Offset) &&
-         "Invalid bitinsert instruction operands!");
+         "Invalid bitextract instruction operands!");
   Op<0>() = Src;
   Op<1>() = Offset;
   setName(Name);
@@ -2649,7 +2649,7 @@ bool BitExtractInst::isValidOperands(const Type *Ty, const Value *Src,
   if (!Src->getType()->isByteTy())
     return false;// Second operand of bitextract must be a byte type.
 
-  if (!Offset->getType()->isIntegerTy())
+  if (!Offset->getType()->isIntegerTy(32))
     return false;  // Third operand of bitextract must be i32.
   return true;
 }
