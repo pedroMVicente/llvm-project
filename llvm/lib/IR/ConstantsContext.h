@@ -562,7 +562,7 @@ public:
     case Instruction::BitInsert:
         return new BitInsertInstConstantExpr(Ops[0], Ops[1], Ops[2]);
     case Instruction::BitExtract:
-        return new BitExtractInstConstantExpr(Ty, Ops[1], Ops[2]);
+      return new BitExtractInstConstantExpr(Ty, Ops[0], Ops[1]);
     }
   }
 };

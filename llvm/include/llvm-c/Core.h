@@ -5145,7 +5145,7 @@ LLVM_C_ABI LLVMValueRef LLVMBuildInsertValue(LLVMBuilderRef,
 LLVM_C_ABI LLVMValueRef LLVMBuildFreeze(LLVMBuilderRef, LLVMValueRef Val,
                                         const char *Name);
 LLVM_C_ABI LLVMValueRef LLVMBuildBitExtract(LLVMBuilderRef,
-                                                LLVMValueRef Type,
+                                                LLVMTypeRef Type,
                                                 LLVMValueRef Src,
                                                 LLVMValueRef Offset,
                                                 const char *Name);

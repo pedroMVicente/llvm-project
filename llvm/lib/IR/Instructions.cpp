@@ -4553,7 +4553,7 @@ BitInsertInst *BitInsertInst::cloneImpl() const {
 }
 
 BitExtractInst *BitExtractInst::cloneImpl() const {
-  return BitExtractInst::Create(getType(), getOperand(1), getOperand(2));
+  return BitExtractInst::Create(getType(), getOperand(0), getOperand(1));
 }
 
 ShuffleVectorInst *ShuffleVectorInst::cloneImpl() const {

@@ -1835,6 +1835,14 @@ Expected<Value *> BitcodeReader::materializeValue(unsigned StartValID,
         I = new ShuffleVectorInst(Ops[0], Ops[1], Ops[2], "constexpr",
                                   InsertBB);
         break;
+      case Instruction::BitExtract:
+        I = BitExtractInst::Create(BC->getType(), Ops[0], Ops[1],
+                                   "constexpr", InsertBB);
+        break;
+      case Instruction::BitInsert:
+        I = BitInsertInst::Create(Ops[0], Ops[1], Ops[2], "constexpr",
+                                  InsertBB);
+        break;
       default:
         llvm_unreachable("Unhandled bitcode constant");
       }
@@ -3649,6 +3657,24 @@ Error BitcodeReader::parseConstants() {
       V = BitcodeConstant::create(
           Alloc, CurTy, Instruction::InsertElement,
           {(unsigned)Record[0], (unsigned)Record[1], IdxRecord});
+      break;
+    }
+    case bitc::CST_CODE_CE_BITEXTRACT: { // BITEXTRACT: [opty, opval, opval]
+      if (Record.size() < 3)
+        return error("Invalid bitextract constexpr record");
+      Type *SrcTy = getTypeByID(Record[0]);
+      if (!SrcTy)
+        return error("Invalid bitextract constexpr record");
+      V = BitcodeConstant::create(Alloc, CurTy, Instruction::BitExtract,
+                                  {(unsigned)Record[1], (unsigned)Record[2]});
+      break;
+    }
+    case bitc::CST_CODE_CE_BITINSERT: { // BITINSERT: [opval, opval, opval]
+      if (Record.size() < 3)
+        return error("Invalid bitinsert constexpr record");
+      V = BitcodeConstant::create(Alloc, CurTy, Instruction::BitInsert,
+                                  {(unsigned)Record[0], (unsigned)Record[1],
+                                   (unsigned)Record[2]});
       break;
     }
     case bitc::CST_CODE_CE_SHUFFLEVEC: { // CE_SHUFFLEVEC: [opval, opval, opval]
@@ -5540,6 +5566,37 @@ Error BitcodeReader::parseFunctionBody(Function *F) {
         return error("Invalid insert element record");
       I = InsertElementInst::Create(Vec, Elt, Idx);
       ResTypeID = VecTypeID;
+      InstructionList.push_back(I);
+      break;
+    }
+
+    case bitc::FUNC_CODE_INST_BITINSERT: { // BITINSERT: [ty, opval, opval, opval]
+      unsigned OpNum = 0;
+      Value *Base, *Val, *Offset;
+      unsigned BaseTypeID, ValTypeID, OffsetTypeID;
+      if (getValueTypePair(Record, OpNum, NextValueNo, Base, BaseTypeID, CurBB) ||
+          getValueTypePair(Record, OpNum, NextValueNo, Val, ValTypeID, CurBB) ||
+          getValueTypePair(Record, OpNum, NextValueNo, Offset, OffsetTypeID,
+                           CurBB))
+        return error("Invalid bitinsert record");
+      I = BitInsertInst::Create(Base, Val, Offset);
+      ResTypeID = BaseTypeID;
+      InstructionList.push_back(I);
+      break;
+    }
+
+    case bitc::FUNC_CODE_INST_BITEXTRACT: { // BITEXTRACT: [ty, opval, opval]
+      unsigned OpNum = 0;
+      unsigned TypeID = Record[OpNum++];
+      Type *ResTy = getTypeByID(TypeID);
+      Value *Src, *Offset;
+      unsigned SrcTypeID, OffsetTypeID;
+      if (getValueTypePair(Record, OpNum, NextValueNo, Src, SrcTypeID, CurBB) ||
+          getValueTypePair(Record, OpNum, NextValueNo, Offset, OffsetTypeID,
+                           CurBB))
+        return error("Invalid bitextract record");
+      I = BitExtractInst::Create(ResTy, Src, Offset);
+      ResTypeID = TypeID;
       InstructionList.push_back(I);
       break;
     }

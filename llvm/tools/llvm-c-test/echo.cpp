@@ -1010,9 +1010,9 @@ struct FunCloner {
         break;
       }
       case LLVMBitExtract: {
-        LLVMValueRef Type = CloneValue(LLVMGetOperand(Src, 0));
-        LLVMValueRef SrcV = CloneValue(LLVMGetOperand(Src, 1));
-        LLVMValueRef Offset = CloneValue(LLVMGetOperand(Src, 2));
+        LLVMTypeRef Type = CloneType(LLVMTypeOf(Src));
+        LLVMValueRef SrcV = CloneValue(LLVMGetOperand(Src, 0));
+        LLVMValueRef Offset = CloneValue(LLVMGetOperand(Src, 1));
         Dst = LLVMBuildBitExtract(Builder, Type, SrcV, Offset, Name);
         break;
       }

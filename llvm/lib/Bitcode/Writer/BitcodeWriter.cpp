@@ -3024,6 +3024,18 @@ void ModuleBitcodeWriter::writeConstants(unsigned FirstVal, unsigned LastVal,
         Record.push_back(VE.getTypeID(C->getOperand(2)->getType()));
         Record.push_back(VE.getValueID(C->getOperand(2)));
         break;
+      case Instruction::BitExtract:
+        Code = bitc::CST_CODE_CE_BITEXTRACT;
+        Record.push_back(VE.getTypeID(C->getType()));
+        Record.push_back(VE.getValueID(C->getOperand(0)));
+        Record.push_back(VE.getValueID(C->getOperand(1)));
+        break;
+      case Instruction::BitInsert:
+        Code = bitc::CST_CODE_CE_BITINSERT;
+        Record.push_back(VE.getValueID(C->getOperand(0)));
+        Record.push_back(VE.getValueID(C->getOperand(1)));
+        Record.push_back(VE.getValueID(C->getOperand(2)));
+        break;
       case Instruction::ShuffleVector:
         // If the return type and argument types are the same, this is a
         // standard shufflevector instruction.  If the types are different,
@@ -3244,6 +3256,18 @@ void ModuleBitcodeWriter::writeInstruction(const Instruction &I,
     Code = bitc::FUNC_CODE_INST_INSERTELT;
     pushValueAndType(I.getOperand(0), InstID, Vals);
     pushValue(I.getOperand(1), InstID, Vals);
+    pushValueAndType(I.getOperand(2), InstID, Vals);
+    break;
+  case Instruction::BitExtract:
+    Code = bitc::FUNC_CODE_INST_BITEXTRACT;
+    Vals.push_back(VE.getTypeID(I.getType()));
+    pushValueAndType(I.getOperand(0), InstID, Vals);
+    pushValue(I.getOperand(1), InstID, Vals);
+    break;
+  case Instruction::BitInsert:
+    Code = bitc::FUNC_CODE_INST_BITINSERT;
+    pushValueAndType(I.getOperand(0), InstID, Vals);
+    pushValueAndType(I.getOperand(1), InstID, Vals);
     pushValueAndType(I.getOperand(2), InstID, Vals);
     break;
   case Instruction::ShuffleVector:
@@ -3613,7 +3637,6 @@ void ModuleBitcodeWriter::writeInstruction(const Instruction &I,
     pushValueAndType(I.getOperand(0), InstID, Vals);
     break;
   }
-
   Stream.EmitRecord(Code, Vals, AbbrevToUse);
   Vals.clear();
 }

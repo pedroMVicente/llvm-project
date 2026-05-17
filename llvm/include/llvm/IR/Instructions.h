@@ -5459,7 +5459,7 @@ DEFINE_TRANSPARENT_OPERAND_ACCESSORS(BitInsertInst, Value)
 //===----------------------------------------------------------------------===//
 class BitExtractInst: public Instruction {
 
-  constexpr static IntrusiveOperandsAllocMarker AllocMarker{3};
+  constexpr static IntrusiveOperandsAllocMarker AllocMarker{2};
 
   LLVM_ABI BitExtractInst(Type* Ty, Value *Src, Value *Offset,
                           const Twine &NameStr = "",
@@ -5497,7 +5497,7 @@ public:
 
 template <>
 struct OperandTraits<BitExtractInst> :
-    public FixedNumOperandTraits<BitExtractInst, 3> {};
+    public FixedNumOperandTraits<BitExtractInst, 2> {};
 
 DEFINE_TRANSPARENT_OPERAND_ACCESSORS(BitExtractInst, Value)
 } // end namespace llvm

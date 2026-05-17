@@ -444,6 +444,8 @@ enum ConstantsCodes {
                                       //  deactivation_symbol]
   CST_CODE_BYTE = 35,                 // BYTE:          [intval]
   CST_CODE_WIDE_BYTE = 36,            // WIDE_BYTE:     [n x intval]
+  CST_CODE_CE_BITEXTRACT = 37,        // BITEXTRACT:    [opty, opval, opval]
+  CST_CODE_CE_BITINSERT = 38,         // BITINSERT:     [opval, opval, opval]
 };
 
 /// CastOpcodes - These are values used in the bitcode files to encode which
