@@ -8563,12 +8563,12 @@ bool LLParser::parseInsertElement(Instruction *&Inst, PerFunctionState &PFS) {
 // parseBitExtract
 // ::= 'bitextract' Type ',' TypeAndValue ',' TypeAndValue
 bool LLParser::parseBitExtract(Instruction *&Inst, PerFunctionState &PFS) {
-  LocTy Loc = Lex.getLoc();
+  LocTy Loc;
   Type *Ty = nullptr;
   Value *Op0, *Op1;
-  if (parseType(Ty) ||
+  if (parseType(Ty, Loc) ||
       parseToken(lltok::comma, "expected ',' after bitextract type") ||
-      parseTypeAndValue(Op0, PFS) ||
+      parseTypeAndValue(Op0, Loc, PFS) ||
       parseToken(lltok::comma, "expected ',' after bitextract source value") ||
       parseTypeAndValue(Op1, PFS))
     return true;
@@ -8583,7 +8583,7 @@ bool LLParser::parseBitExtract(Instruction *&Inst, PerFunctionState &PFS) {
 // parseBitInsert
 // ::= 'bitinsert' TypeAndValue ',' TypeAndValue ',' TypeAndValue
 bool LLParser::parseBitInsert(Instruction *&Inst, PerFunctionState &PFS) {
-  LocTy Loc = Lex.getLoc();
+  LocTy Loc;
   Value *Op0, *Op1, *Op2;
   if (parseTypeAndValue(Op0, Loc, PFS) ||
       parseToken(lltok::comma, "expected ',' after bitinsert source value") ||
