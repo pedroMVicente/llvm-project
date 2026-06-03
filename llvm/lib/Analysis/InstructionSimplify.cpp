@@ -5542,6 +5542,39 @@ Value *llvm::simplifyExtractElementInst(Value *Vec, Value *Idx,
   return ::simplifyExtractElementInst(Vec, Idx, Q, RecursionLimit);
 }
 
+/// Given operands for an BitInsert, see if we can fold the result.
+/// If not, this returns null.
+static Value *simplifyBitInsertInst(Value *Base, Value *Val, Value* Offset,
+                                       const SimplifyQuery &, unsigned){
+  return nullptr;
+}
+
+/// Given operands for an BitExtract, see if we can fold the result.
+/// If not, this returns null.
+static Value *simplifyBitExtractInst(Type *Ty, Value *Src, Value *Offset,
+                                      const SimplifyQuery &, unsigned) {
+
+  if (auto *BI = dyn_cast<BitInsertInst>(Src)) {
+      Value *InsertedVal  = BI->getOperand(1); // Val  operand of bitinsert
+      Value *InsertOffset = BI->getOperand(2); // Offset operand of bitinsert
+
+      // Offsets must be the same value (or equal constants).
+      if (Offset == InsertOffset ||
+          (isa<ConstantInt>(Offset) && isa<ConstantInt>(InsertOffset) &&
+            cast<ConstantInt>(Offset)->getValue() ==
+            cast<ConstantInt>(InsertOffset)->getValue())) {
+
+          // The extracted type must match the inserted value's type exactly.
+          // This ensures the bit ranges [offset, offset+width-1] are identical,
+          // so we are neither extracting more nor fewer bits than were inserted.
+          if (Ty == InsertedVal->getType())
+              return InsertedVal;
+      }
+  }
+
+  return nullptr;
+}
+
 /// See if we can fold the given phi. If not, returns null.
 static Value *simplifyPHINode(PHINode *PN, ArrayRef<Value *> IncomingValues,
                               const SimplifyQuery &Q) {

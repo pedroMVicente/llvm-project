@@ -207,6 +207,14 @@ LLVM_ABI Value *simplifyShuffleVectorInst(Value *Op0, Value *Op1,
                                           ArrayRef<int> Mask, Type *RetTy,
                                           const SimplifyQuery &Q);
 
+/// Given operands for a BitInsert, fold the result or return null.
+LLVM_ABI Value *simplifyBitInsertInst(Value *Base, Value *Val, Value *Offset,
+                                          const SimplifyQuery &Q);
+
+/// Given operands for a BitExtract, fold the result or return null.
+LLVM_ABI Value *simplifyBitExtractInst(Type Ty, Value *Src, Value *Offset,
+                                          const SimplifyQuery &Q);
+
 //=== Helper functions for higher up the class hierarchy.
 
 /// Given operands for a CmpInst, fold the result or return null.
