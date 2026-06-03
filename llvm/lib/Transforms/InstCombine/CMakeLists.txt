@@ -13,6 +13,7 @@ add_llvm_component_library(LLVMInstCombine
   InstCombineSelect.cpp
   InstCombineShifts.cpp
   InstCombineSimplifyDemanded.cpp
+  InstCombineBitInsert.cpp
   InstCombineVectorOps.cpp
 
   ADDITIONAL_HEADER_DIRS
