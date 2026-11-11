@@ -8101,6 +8101,10 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
     D.Diag(diag::warn_drv_clang_unsupported)
         << Args.getLastArg(options::OPT_funsigned_bitfields)->getAsString(Args);
 
+  // Use llvm bitinsert and bitextract instructions for clang's bitfields
+  Args.addOptInFlag(CmdArgs, options::OPT_fbit_insert_extract_bitfields,
+                    options::OPT_fno_bit_insert_extract_bitfields);
+
   // -fsigned-bitfields is default, and clang doesn't support -fno-for-scope.
   if (!Args.hasFlag(options::OPT_ffor_scope, options::OPT_fno_for_scope, true))
     D.Diag(diag::err_drv_clang_unsupported)

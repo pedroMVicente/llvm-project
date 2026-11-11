@@ -4634,6 +4634,11 @@ def fspell_checking_limit_EQ : Joined<["-"], "fspell-checking-limit=">, Group<f_
   HelpText<"Set the maximum number of times to perform spell checking on unrecognized identifiers (0 = no limit)">,
   MarshallingInfoInt<DiagnosticOpts<"SpellCheckingLimit">, "DiagnosticOptions::DefaultSpellCheckingLimit">;
 def fsigned_bitfields : Flag<["-"], "fsigned-bitfields">, Group<f_Group>;
+defm bit_insert_extract_bitfields : BoolFOption<"bit-insert-extract-bitfields",
+  CodeGenOpts<"BitInsertExtractBitfields">, DefaultFalse,
+  PosFlag<SetTrue, [], [ClangOption, CC1Option],
+          "Use bit insert/extract operations for bitfield accesses">,
+  NegFlag<SetFalse>>;
 defm signed_char : BoolFOption<"signed-char",
   LangOpts<"CharIsSigned">, DefaultTrue,
   NegFlag<SetFalse, [], [ClangOption, CC1Option], "char is unsigned">,
