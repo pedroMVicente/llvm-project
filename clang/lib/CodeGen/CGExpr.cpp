@@ -2664,6 +2664,7 @@ RValue CodeGenFunction::EmitLoadOfBitfieldLValue(LValue LV,
                                                  SourceLocation Loc) {
   const CGBitFieldInfo &Info = LV.getBitFieldInfo();
 
+  // Get the output type.
   llvm::Type *ResLTy = ConvertType(LV.getType());
 
   Address Ptr = LV.getBitFieldAddress();
@@ -3088,6 +3089,8 @@ void CodeGenFunction::EmitStoreThroughBitfieldLValue(RValue Src, LValue Dst,
       UseVolatile ? Info.VolatileStorageSize : Info.StorageSize;
   const unsigned Offset = UseVolatile ? Info.VolatileOffset : Info.Offset;
 
+  // See if there are other bits in the bitfield's storage we'll need to load
+  // and mask together with source before storing.
   if (StorageSize != Info.Size &&
       CGM.getCodeGenOpts().BitInsertExtractBitfields) {
     assert(StorageSize > Info.Size && "Invalid bitfield size.");
@@ -3105,6 +3108,7 @@ void CodeGenFunction::EmitStoreThroughBitfieldLValue(RValue Src, LValue Dst,
     llvm::Value *Val =
         Builder.CreateLoad(Ptr, Dst.isVolatileQualified(), "bf.load");
 
+    // Mask the source value as needed.
     if (!Dst.getType()->hasBooleanRepresentation())
       SrcVal = Builder.CreateAnd(
           SrcVal, llvm::APInt::getLowBitsSet(StorageSize, Info.Size),
@@ -3113,10 +3117,12 @@ void CodeGenFunction::EmitStoreThroughBitfieldLValue(RValue Src, LValue Dst,
     if (Offset)
       SrcVal = Builder.CreateShl(SrcVal, Offset, "bf.shl");
 
+    // Mask out the original value.
     Val = Builder.CreateAnd(
         Val, ~llvm::APInt::getBitsSet(StorageSize, Offset, Offset + Info.Size),
         "bf.clear");
 
+    // Or together the unchanged values and the source value.
     SrcVal = Builder.CreateOr(Val, SrcVal, "bf.set");
   } else {
     assert(Offset == 0);
