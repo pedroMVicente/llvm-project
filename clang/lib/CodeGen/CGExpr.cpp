@@ -2697,8 +2697,7 @@ RValue CodeGenFunction::EmitLoadOfBitfieldLValue(LValue LV,
       Val = Builder.CreateLShr(Val, Offset, "bf.lshr");
     if (static_cast<unsigned>(Offset) + Info.Size < StorageSize)
       Val = Builder.CreateAnd(
-          Val, llvm::APInt::getLowBitsSet(StorageSize, Info.Size),
-          "bf.clear");
+          Val, llvm::APInt::getLowBitsSet(StorageSize, Info.Size), "bf.clear");
   }
   Val = Builder.CreateIntCast(Val, ResLTy, Info.IsSigned, "bf.cast");
   EmitScalarRangeCheck(Val, LV.getType(), Loc);
@@ -3089,7 +3088,8 @@ void CodeGenFunction::EmitStoreThroughBitfieldLValue(RValue Src, LValue Dst,
       UseVolatile ? Info.VolatileStorageSize : Info.StorageSize;
   const unsigned Offset = UseVolatile ? Info.VolatileOffset : Info.Offset;
 
-  if (StorageSize != Info.Size && CGM.getCodeGenOpts().BitInsertExtractBitfields) {
+  if (StorageSize != Info.Size &&
+      CGM.getCodeGenOpts().BitInsertExtractBitfields) {
     assert(StorageSize > Info.Size && "Invalid bitfield size.");
     Address BytePtr = Ptr.withElementType(Builder.getByteNTy(StorageSize));
     llvm::Value *Old =
@@ -3097,8 +3097,8 @@ void CodeGenFunction::EmitStoreThroughBitfieldLValue(RValue Src, LValue Dst,
     llvm::Value *Field =
         Builder.CreateTrunc(SrcVal, Builder.getIntNTy(Info.Size), "bf.value");
     MaskedVal = Builder.CreateZExt(Field, SrcVal->getType(), "bf.value.zext");
-    SrcVal = Builder.CreateBitInsert(Old, Field, Builder.getInt32(Offset),
-                                     "bf.set");
+    SrcVal =
+        Builder.CreateBitInsert(Old, Field, Builder.getInt32(Offset), "bf.set");
     Ptr = BytePtr;
   } else if (StorageSize != Info.Size) {
     assert(StorageSize > Info.Size && "Invalid bitfield size.");
@@ -3114,8 +3114,7 @@ void CodeGenFunction::EmitStoreThroughBitfieldLValue(RValue Src, LValue Dst,
       SrcVal = Builder.CreateShl(SrcVal, Offset, "bf.shl");
 
     Val = Builder.CreateAnd(
-        Val,
-        ~llvm::APInt::getBitsSet(StorageSize, Offset, Offset + Info.Size),
+        Val, ~llvm::APInt::getBitsSet(StorageSize, Offset, Offset + Info.Size),
         "bf.clear");
 
     SrcVal = Builder.CreateOr(Val, SrcVal, "bf.set");
