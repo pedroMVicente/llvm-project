@@ -3468,6 +3468,12 @@ defm fine_grained_bitfield_accesses : BoolOption<"f", "fine-grained-bitfield-acc
   BothFlags<[], [ClangOption, CC1Option]>>,
   Group<f_clang_Group>;
 
+def fbit_insert_extract_bitfields : Flag<["-"], "fbit-insert-extract-bitfields">,
+  Group<f_Group>, Visibility<[CC1Option]>,
+  HelpText<"Use the LLVM bitinsert and bitextract instructions for bit-field "
+           "accesses (experimental)">,
+  MarshallingInfoFlag<CodeGenOpts<"BitInsertExtractBitfields">>;
+
 def fexperimental_relative_cxx_abi_vtables :
   Flag<["-"], "fexperimental-relative-c++-abi-vtables">,
   Group<f_clang_Group>, Visibility<[ClangOption, CC1Option]>,
@@ -4634,11 +4640,6 @@ def fspell_checking_limit_EQ : Joined<["-"], "fspell-checking-limit=">, Group<f_
   HelpText<"Set the maximum number of times to perform spell checking on unrecognized identifiers (0 = no limit)">,
   MarshallingInfoInt<DiagnosticOpts<"SpellCheckingLimit">, "DiagnosticOptions::DefaultSpellCheckingLimit">;
 def fsigned_bitfields : Flag<["-"], "fsigned-bitfields">, Group<f_Group>;
-defm bit_insert_extract_bitfields : BoolFOption<"bit-insert-extract-bitfields",
-  CodeGenOpts<"BitInsertExtractBitfields">, DefaultFalse,
-  PosFlag<SetTrue, [], [ClangOption, CC1Option],
-          "Use bit insert/extract operations for bitfield accesses">,
-  NegFlag<SetFalse>>;
 defm signed_char : BoolFOption<"signed-char",
   LangOpts<"CharIsSigned">, DefaultTrue,
   NegFlag<SetFalse, [], [ClangOption, CC1Option], "char is unsigned">,

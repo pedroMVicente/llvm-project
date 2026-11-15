@@ -2675,32 +2675,30 @@ RValue CodeGenFunction::EmitLoadOfBitfieldLValue(LValue LV,
   const unsigned StorageSize =
       UseVolatile ? Info.VolatileStorageSize : Info.StorageSize;
 
-  llvm::Value *Val;
-  if (CGM.getCodeGenOpts().BitInsertExtractBitfields) {
-    Val =
-        Builder.CreateLoad(Ptr.withElementType(Builder.getByteNTy(StorageSize)),
-                           LV.isVolatileQualified(), "bf.load");
-    Val = Builder.Insert(
-        llvm::BitExtractInst::Create(Builder.getIntNTy(Info.Size), Val,
-                                     Builder.getInt32(Offset)),
-        "bf.extract");
+  const bool UseBitExtract = CGM.getCodeGenOpts().BitInsertExtractBitfields;
+  if (UseBitExtract)
+    Ptr = Ptr.withElementType(Builder.getByteNTy(StorageSize));
+
+  llvm::Value *Val =
+      Builder.CreateLoad(Ptr, LV.isVolatileQualified(), "bf.load");
+
+  if (UseBitExtract) {
+    Val = Builder.CreateBitExtract(Builder.getIntNTy(Info.Size), Val,
+                                   Builder.getInt32(Offset), "bf.extract");
+  } else if (Info.IsSigned) {
+    assert(static_cast<unsigned>(Offset + Info.Size) <= StorageSize);
+    unsigned HighBits = StorageSize - Offset - Info.Size;
+    if (HighBits)
+      Val = Builder.CreateShl(Val, HighBits, "bf.shl");
+    if (Offset + HighBits)
+      Val = Builder.CreateAShr(Val, Offset + HighBits, "bf.ashr");
   } else {
-    Val = Builder.CreateLoad(Ptr, LV.isVolatileQualified(), "bf.load");
-    if (Info.IsSigned) {
-      assert(static_cast<unsigned>(Offset + Info.Size) <= StorageSize);
-      unsigned HighBits = StorageSize - Offset - Info.Size;
-      if (HighBits)
-        Val = Builder.CreateShl(Val, HighBits, "bf.shl");
-      if (Offset + HighBits)
-        Val = Builder.CreateAShr(Val, Offset + HighBits, "bf.ashr");
-    } else {
-      if (Offset)
-        Val = Builder.CreateLShr(Val, Offset, "bf.lshr");
-      if (static_cast<unsigned>(Offset) + Info.Size < StorageSize)
-        Val = Builder.CreateAnd(
-            Val, llvm::APInt::getLowBitsSet(StorageSize, Info.Size),
-            "bf.clear");
-    }
+    if (Offset)
+      Val = Builder.CreateLShr(Val, Offset, "bf.lshr");
+    if (static_cast<unsigned>(Offset) + Info.Size < StorageSize)
+      Val = Builder.CreateAnd(
+          Val, llvm::APInt::getLowBitsSet(StorageSize, Info.Size),
+          "bf.clear");
   }
   Val = Builder.CreateIntCast(Val, ResLTy, Info.IsSigned, "bf.cast");
   EmitScalarRangeCheck(Val, LV.getType(), Loc);
@@ -3090,46 +3088,37 @@ void CodeGenFunction::EmitStoreThroughBitfieldLValue(RValue Src, LValue Dst,
   const unsigned StorageSize =
       UseVolatile ? Info.VolatileStorageSize : Info.StorageSize;
   const unsigned Offset = UseVolatile ? Info.VolatileOffset : Info.Offset;
-  // See if there are other bits in the bitfield's storage we'll need to load
-  // and mask together with source before storing.
-  if (StorageSize != Info.Size) {
+
+  if (StorageSize != Info.Size && CGM.getCodeGenOpts().BitInsertExtractBitfields) {
     assert(StorageSize > Info.Size && "Invalid bitfield size.");
+    Address BytePtr = Ptr.withElementType(Builder.getByteNTy(StorageSize));
+    llvm::Value *Old =
+        Builder.CreateLoad(BytePtr, Dst.isVolatileQualified(), "bf.load");
+    llvm::Value *Field =
+        Builder.CreateTrunc(SrcVal, Builder.getIntNTy(Info.Size), "bf.value");
+    MaskedVal = Builder.CreateZExt(Field, SrcVal->getType(), "bf.value.zext");
+    SrcVal = Builder.CreateBitInsert(Old, Field, Builder.getInt32(Offset),
+                                     "bf.set");
+    Ptr = BytePtr;
+  } else if (StorageSize != Info.Size) {
+    assert(StorageSize > Info.Size && "Invalid bitfield size.");
+    llvm::Value *Val =
+        Builder.CreateLoad(Ptr, Dst.isVolatileQualified(), "bf.load");
 
-    if (CGM.getCodeGenOpts().BitInsertExtractBitfields) {
-      Address BytePtr = Ptr.withElementType(Builder.getByteNTy(StorageSize));
+    if (!Dst.getType()->hasBooleanRepresentation())
+      SrcVal = Builder.CreateAnd(
+          SrcVal, llvm::APInt::getLowBitsSet(StorageSize, Info.Size),
+          "bf.value");
+    MaskedVal = SrcVal;
+    if (Offset)
+      SrcVal = Builder.CreateShl(SrcVal, Offset, "bf.shl");
 
-      llvm::Value *Old =
-          Builder.CreateLoad(BytePtr, Dst.isVolatileQualified(), "bf.load");
+    Val = Builder.CreateAnd(
+        Val,
+        ~llvm::APInt::getBitsSet(StorageSize, Offset, Offset + Info.Size),
+        "bf.clear");
 
-      llvm::Value *Field =
-          Builder.CreateTrunc(SrcVal, Builder.getIntNTy(Info.Size), "bf.value");
-
-      MaskedVal = Builder.CreateZExt(Field, SrcVal->getType(), "bf.value.zext");
-
-      SrcVal = Builder.Insert(
-          llvm::BitInsertInst::Create(Old, Field, Builder.getInt32(Offset)),
-          "bf.set");
-
-      Ptr = BytePtr;
-    } else {
-      llvm::Value *Val =
-          Builder.CreateLoad(Ptr, Dst.isVolatileQualified(), "bf.load");
-
-      if (!Dst.getType()->hasBooleanRepresentation())
-        SrcVal = Builder.CreateAnd(
-            SrcVal, llvm::APInt::getLowBitsSet(StorageSize, Info.Size),
-            "bf.value");
-      MaskedVal = SrcVal;
-      if (Offset)
-        SrcVal = Builder.CreateShl(SrcVal, Offset, "bf.shl");
-
-      Val = Builder.CreateAnd(
-          Val,
-          ~llvm::APInt::getBitsSet(StorageSize, Offset, Offset + Info.Size),
-          "bf.clear");
-
-      SrcVal = Builder.CreateOr(Val, SrcVal, "bf.set");
-    }
+    SrcVal = Builder.CreateOr(Val, SrcVal, "bf.set");
   } else {
     assert(Offset == 0);
     // According to the AACPS:
